@@ -59,8 +59,14 @@ export default function MessageCardGrid() {
     markAsSent(index);
   };
 
-  const filteredData = data.map((row, i) => ({ row, index: i })).filter(({ index }) => {
-    const status = dispatchStatuses[index]?.status || 'Pending';
+  const filteredData = data.map((row, i) => ({ row, index: i })).filter(({ row, index }) => {
+    const touch1Col = columns.find(c => String(c).toLowerCase().trim() === 'touch 1 channel');
+    const touch1Val = touch1Col ? String(row[touch1Col] || '').trim().toLowerCase() : '';
+    const hasTouch1 = touch1Val !== '' && touch1Val !== 'empty' && touch1Val !== 'null';
+    
+    let status = dispatchStatuses[index]?.status || 'Pending';
+    if (hasTouch1) status = 'Contacted';
+
     if (filter === 'All') return true;
     return status === filter;
   });
@@ -84,8 +90,8 @@ export default function MessageCardGrid() {
           </div>
         </div>
         
-        <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner">
-          {['All', 'Pending', 'Sent'].map(f => (
+        <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner overflow-x-auto">
+          {['All', 'Pending', 'Sent', 'Contacted'].map(f => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
@@ -106,8 +112,18 @@ export default function MessageCardGrid() {
           const phone = columnMapping.phone ? row[columnMapping.phone] : 'No Phone';
           const resolvedMsg = resolveTemplate(row);
 
+          const touch1Col = columns.find(c => String(c).toLowerCase().trim() === 'touch 1 channel');
+          const touch1Val = touch1Col ? String(row[touch1Col] || '').trim().toLowerCase() : '';
+          const hasTouch1 = touch1Val !== '' && touch1Val !== 'empty' && touch1Val !== 'null';
+
           return (
-            <div key={index} className={`bg-white rounded-2xl shadow-sm border p-5 flex flex-col transition-all duration-200 ${isSent ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 hover:border-emerald-400 hover:shadow-md'}`}>
+            <div key={index} className={`rounded-2xl shadow-sm border p-5 flex flex-col transition-all duration-200 ${
+              hasTouch1
+                ? 'opacity-60 bg-slate-50 border-slate-200'
+                : isSent 
+                  ? 'bg-emerald-50/20 border-emerald-200' 
+                  : 'bg-white border-slate-200 hover:border-emerald-400 hover:shadow-md'
+            }`}>
               
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -115,11 +131,18 @@ export default function MessageCardGrid() {
                   <p className="text-xs text-slate-500 mt-0.5">{phone}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${isSent ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {isSent ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                    {isSent ? 'Sent' : 'Pending'}
-                  </span>
-                  {isSent && <div className="text-[10px] text-slate-400 mt-1">{dispatchRecord.timestamp}</div>}
+                  {hasTouch1 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600">
+                      <CheckCircle2 size={12} />
+                      Contacted
+                    </span>
+                  ) : (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${isSent ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {isSent ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                      {isSent ? 'Sent' : 'Pending'}
+                    </span>
+                  )}
+                  {isSent && !hasTouch1 && <div className="text-[10px] text-slate-400 mt-1">{dispatchRecord.timestamp}</div>}
                 </div>
               </div>
 
@@ -129,14 +152,17 @@ export default function MessageCardGrid() {
 
               <button 
                 onClick={() => handleSend(index, row, resolvedMsg)}
+                disabled={hasTouch1}
                 className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${
-                  isSent 
-                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
+                  hasTouch1
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : isSent 
+                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
+                      : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
                 }`}
               >
                 <Send size={16} /> 
-                {isSent ? 'Resend Campaign' : 'Send WhatsApp'}
+                {hasTouch1 ? 'Already Contacted' : isSent ? 'Resend Campaign' : 'Send WhatsApp'}
               </button>
             </div>
           );
