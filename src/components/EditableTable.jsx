@@ -4,7 +4,7 @@ import { Trash2, Plus, Search } from 'lucide-react';
 
 export default function EditableTable() {
   const { datasets, activeDatasetId, setColumnMapping, updateRow, addRow, deleteRow, clearData } = useAppStore();
-  const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} };
+  const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [], columnMapping: { phone: '', name: '', email: '' }, dispatchStatuses: {} };
   const { data, columns, columnMapping } = activeDataset;
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCell, setEditingCell] = useState(null);
@@ -61,6 +61,17 @@ export default function EditableTable() {
               {columns.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Email Column:</label>
+            <select 
+              value={columnMapping.email || ''} 
+              onChange={(e) => setColumnMapping({ email: e.target.value })}
+              className="text-sm border border-indigo-200 rounded-md py-1 px-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">-- Select --</option>
+              {columns.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
         </div>
 
         {/* Search & Actions */}
@@ -91,6 +102,7 @@ export default function EditableTable() {
                   {col}
                   {col === columnMapping.phone && <span className="ml-2 bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[10px]">PHONE</span>}
                   {col === columnMapping.name && <span className="ml-2 bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px]">NAME</span>}
+                  {col === columnMapping.email && <span className="ml-2 bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px]">EMAIL</span>}
                 </th>
               ))}
               <th className="px-6 py-3 text-right"></th>

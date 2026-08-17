@@ -39,8 +39,9 @@ export default function ExcelUploader() {
           const detectedColumns = Object.keys(parsedData[0]);
           const phoneCol = detectedColumns.find(c => /phone|mobile|contact|cell|whatsapp/i.test(c)) || '';
           const nameCol = detectedColumns.find(c => /name|customer|client/i.test(c)) || '';
+          const emailCol = detectedColumns.find(c => /email|e-mail|mail/i.test(c)) || '';
 
-          addDataset(file.name, parsedData, detectedColumns, { phone: phoneCol, name: nameCol });
+          addDataset(file.name, parsedData, detectedColumns, { phone: phoneCol, name: nameCol, email: emailCol });
         }
       } catch (err) {
         alert("Invalid file format. Please upload a valid .xlsx or .csv file.");

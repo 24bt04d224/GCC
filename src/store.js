@@ -14,7 +14,7 @@ export const useAppStore = create(
 
       addDataset: (name, data, columns, columnMapping) => set((state) => {
         const id = Date.now().toString();
-        const newDataset = { id, name, data, columns, columnMapping: columnMapping || { phone: '', name: '' }, dispatchStatuses: {} };
+        const newDataset = { id, name, data, columns, columnMapping: columnMapping || { phone: '', name: '', email: '' }, dispatchStatuses: {} };
         return { 
           datasets: [...state.datasets, newDataset],
           activeDatasetId: id 
@@ -78,7 +78,7 @@ export const useAppStore = create(
         return {
           datasets: state.datasets.map(d => 
             d.id === state.activeDatasetId 
-              ? { ...d, data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} } 
+              ? { ...d, data: [], columns: [], columnMapping: { phone: '', name: '', email: '' }, dispatchStatuses: {} } 
               : d
           )
         };
@@ -125,13 +125,13 @@ export const useAppStore = create(
         const sampleDataset = {
           id,
           name: 'Sample Data',
-          columns: ['StudentName', 'Title', 'Mobile', 'Course', 'Batch', 'Country'],
-          columnMapping: { phone: 'Mobile', name: 'StudentName' },
+          columns: ['StudentName', 'Title', 'Mobile', 'Course', 'Batch', 'Country', 'Email ID'],
+          columnMapping: { phone: 'Mobile', name: 'StudentName', email: 'Email ID' },
           data: [
-            { StudentName: 'Aarav Patel', Title: 'Sir', Mobile: '9876543210', Course: 'B.Tech CSE', Batch: '2021', Country: 'USA' },
-            { StudentName: 'Priya Sharma', Title: 'Ma\'am', Mobile: '9123456789', Course: 'BBA', Batch: '2020', Country: 'UK' },
-            { StudentName: 'Rahul Verma', Title: 'Sir', Mobile: '9988776655', Course: 'B.Sc Chemistry', Batch: '2022', Country: 'Canada' },
-            { StudentName: 'Sneha Gupta', Title: 'Ma\'am', Mobile: '9871234560', Course: 'B.Tech Mechanical', Batch: '2019', Country: 'Germany' },
+            { StudentName: 'Aarav Patel', Title: 'Sir', Mobile: '9876543210', Course: 'B.Tech CSE', Batch: '2021', Country: 'USA', 'Email ID': 'aarav@example.com' },
+            { StudentName: 'Priya Sharma', Title: 'Ma\'am', Mobile: '9123456789', Course: 'BBA', Batch: '2020', Country: 'UK', 'Email ID': 'priya@example.com' },
+            { StudentName: 'Rahul Verma', Title: 'Sir', Mobile: '9988776655', Course: 'B.Sc Chemistry', Batch: '2022', Country: 'Canada', 'Email ID': 'rahul@example.com' },
+            { StudentName: 'Sneha Gupta', Title: 'Ma\'am', Mobile: '9871234560', Course: 'B.Tech Mechanical', Batch: '2019', Country: 'Germany', 'Email ID': 'sneha@example.com' },
           ],
           dispatchStatuses: {}
         };

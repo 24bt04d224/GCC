@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store';
-import { Send, CheckCircle2, Clock } from 'lucide-react';
+import { Send, CheckCircle2, Clock, Mail } from 'lucide-react';
 
 export default function MessageCardGrid() {
   const { datasets, activeDatasetId, templates, activeTemplateId, markAsSent, deleteRow } = useAppStore();
@@ -71,6 +71,22 @@ export default function MessageCardGrid() {
 
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(resolvedMessage)}`;
     window.open(url, '_blank');
+    markAsSent(index);
+  };
+
+  const handleSendEmail = (index, row, resolvedMessage) => {
+    const emailCol = columnMapping.email;
+    if (!emailCol || !row[emailCol]) {
+      alert("No valid email address found! Check your column mapping.");
+      return;
+    }
+
+    const email = row[emailCol];
+    const subject = encodeURIComponent("Campaign Update");
+    const body = encodeURIComponent(resolvedMessage);
+
+    const url = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.open(url, '_self'); // mailto usually works better with _self or just changing window.location
     markAsSent(index);
   };
 
@@ -219,11 +235,11 @@ export default function MessageCardGrid() {
                 {resolvedMsg}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col xl:flex-row gap-2">
                 <button 
                   onClick={() => handleSend(index, row, resolvedMsg)}
                   disabled={isContacted}
-                  className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${
+                  className={`flex-1 py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 font-bold transition-all text-sm ${
                     isContacted
                       ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       : isSent 
@@ -231,13 +247,27 @@ export default function MessageCardGrid() {
                         : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
                   }`}
                 >
-                  <Send size={16} /> 
-                  {isContacted ? 'Already Contacted' : isSent ? 'Resend' : 'Send WhatsApp'}
+                  <Send size={14} /> 
+                  WhatsApp
+                </button>
+                <button 
+                  onClick={() => handleSendEmail(index, row, resolvedMsg)}
+                  disabled={isContacted}
+                  className={`flex-1 py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 font-bold transition-all text-sm ${
+                    isContacted
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : isSent 
+                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-200'
+                  }`}
+                >
+                  <Mail size={14} /> 
+                  Email
                 </button>
                 {isDuplicate && (
                   <button 
                     onClick={() => deleteRow(index)}
-                    className="px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl font-bold transition-all border border-red-100"
+                    className="px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl font-bold transition-all border border-red-100 text-sm"
                     title="Remove Duplicate"
                   >
                     Delete
