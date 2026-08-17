@@ -241,7 +241,7 @@ export default function MessageCardGrid() {
                     Delete
                   </button>
                 )}
-              </div>>
+              </div>
             </div>
           );
         })}
