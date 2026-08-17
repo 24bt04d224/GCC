@@ -5,7 +5,20 @@ import { Send, CheckCircle2, Clock } from 'lucide-react';
 export default function MessageCardGrid() {
   const { data, columns, columnMapping, templates, activeTemplateId, dispatchStatuses, markAsSent } = useAppStore();
   const [filter, setFilter] = useState('All');
+  const [exclusionToggles, setExclusionToggles] = useState(['Touch 1 Channel']); // Default to Touch 1
   const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
+
+  const checkIsContacted = (row) => {
+    for (const toggle of exclusionToggles) {
+      const colName = toggle.toLowerCase().trim();
+      const col = columns.find(c => String(c).toLowerCase().trim() === colName);
+      const val = col ? String(row[col] || '').trim().toLowerCase() : '';
+      if (val !== '' && val !== 'empty' && val !== 'null') {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const resolveTemplate = (row) => {
     let resolved = activeTemplate.text;
@@ -60,12 +73,10 @@ export default function MessageCardGrid() {
   };
 
   const filteredData = data.map((row, i) => ({ row, index: i })).filter(({ row, index }) => {
-    const touch1Col = columns.find(c => String(c).toLowerCase().trim() === 'touch 1 channel');
-    const touch1Val = touch1Col ? String(row[touch1Col] || '').trim().toLowerCase() : '';
-    const hasTouch1 = touch1Val !== '' && touch1Val !== 'empty' && touch1Val !== 'null';
+    const isContacted = checkIsContacted(row);
     
     let status = dispatchStatuses[index]?.status || 'Pending';
-    if (hasTouch1) status = 'Contacted';
+    if (isContacted) status = 'Contacted';
 
     if (filter === 'All') return true;
     return status === filter;
@@ -78,6 +89,35 @@ export default function MessageCardGrid() {
   return (
     <div className="flex flex-col h-[650px]">
       
+      {/* Exclusion Toggles */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row items-center gap-4 shrink-0">
+        <span className="text-sm font-bold text-slate-700">Disable cards if already contacted in:</span>
+        <div className="flex gap-2 flex-wrap">
+          {['Touch 1 Channel', 'Touch 2 Channel', 'Touch 3 Channel'].map(t => {
+            const isActive = exclusionToggles.includes(t);
+            return (
+              <button
+                key={t}
+                onClick={() => {
+                  if (isActive) {
+                    setExclusionToggles(exclusionToggles.filter(x => x !== t));
+                  } else {
+                    setExclusionToggles([...exclusionToggles, t]);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  isActive 
+                    ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-sm' 
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                {t}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Utility Header */}
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
         <div className="w-full sm:w-1/2">
@@ -112,13 +152,11 @@ export default function MessageCardGrid() {
           const phone = columnMapping.phone ? row[columnMapping.phone] : 'No Phone';
           const resolvedMsg = resolveTemplate(row);
 
-          const touch1Col = columns.find(c => String(c).toLowerCase().trim() === 'touch 1 channel');
-          const touch1Val = touch1Col ? String(row[touch1Col] || '').trim().toLowerCase() : '';
-          const hasTouch1 = touch1Val !== '' && touch1Val !== 'empty' && touch1Val !== 'null';
+          const isContacted = checkIsContacted(row);
 
           return (
             <div key={index} className={`rounded-2xl shadow-sm border p-5 flex flex-col transition-all duration-200 ${
-              hasTouch1
+              isContacted
                 ? 'opacity-60 bg-slate-50 border-slate-200'
                 : isSent 
                   ? 'bg-emerald-50/20 border-emerald-200' 
@@ -131,7 +169,7 @@ export default function MessageCardGrid() {
                   <p className="text-xs text-slate-500 mt-0.5">{phone}</p>
                 </div>
                 <div className="text-right">
-                  {hasTouch1 ? (
+                  {isContacted ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600">
                       <CheckCircle2 size={12} />
                       Contacted
@@ -142,7 +180,7 @@ export default function MessageCardGrid() {
                       {isSent ? 'Sent' : 'Pending'}
                     </span>
                   )}
-                  {isSent && !hasTouch1 && <div className="text-[10px] text-slate-400 mt-1">{dispatchRecord.timestamp}</div>}
+                  {isSent && !isContacted && <div className="text-[10px] text-slate-400 mt-1">{dispatchRecord.timestamp}</div>}
                 </div>
               </div>
 
@@ -152,9 +190,9 @@ export default function MessageCardGrid() {
 
               <button 
                 onClick={() => handleSend(index, row, resolvedMsg)}
-                disabled={hasTouch1}
+                disabled={isContacted}
                 className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${
-                  hasTouch1
+                  isContacted
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     : isSent 
                       ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
@@ -162,7 +200,7 @@ export default function MessageCardGrid() {
                 }`}
               >
                 <Send size={16} /> 
-                {hasTouch1 ? 'Already Contacted' : isSent ? 'Resend Campaign' : 'Send WhatsApp'}
+                {isContacted ? 'Already Contacted' : isSent ? 'Resend Campaign' : 'Send WhatsApp'}
               </button>
             </div>
           );
