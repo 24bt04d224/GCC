@@ -190,7 +190,17 @@ export default function MessageCardGrid() {
           const isDuplicate = duplicateIndices.has(index);
           const name = columnMapping.name ? row[columnMapping.name] : 'Unknown';
           const phone = columnMapping.phone ? row[columnMapping.phone] : 'No Phone';
-          const srNo = columnMapping.srNo && row[columnMapping.srNo] ? row[columnMapping.srNo] : (index + 1);
+          
+          let srNo = index + 1;
+          if (columnMapping.srNo && row[columnMapping.srNo]) {
+            srNo = row[columnMapping.srNo];
+          } else {
+            const srKey = Object.keys(row).find(k => /sr|serial|no|#|id/i.test(k));
+            if (srKey && row[srKey]) {
+              srNo = row[srKey];
+            }
+          }
+          
           const resolvedMsg = resolveTemplate(row);
 
           const isContacted = checkIsContacted(row);
