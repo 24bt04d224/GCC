@@ -87,7 +87,7 @@ export default function MessageCardGrid() {
       return;
     }
 
-    const subject = encodeURIComponent("Campaign Update");
+    const subject = encodeURIComponent("Request for a Brief Alumni Interaction – Global Connect Club");
     const body = encodeURIComponent(resolvedMessage);
 
     const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
