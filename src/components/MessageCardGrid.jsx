@@ -190,6 +190,7 @@ export default function MessageCardGrid() {
           const isDuplicate = duplicateIndices.has(index);
           const name = columnMapping.name ? row[columnMapping.name] : 'Unknown';
           const phone = columnMapping.phone ? row[columnMapping.phone] : 'No Phone';
+          const email = columnMapping.email ? row[columnMapping.email] : (Object.keys(row).find(k => /email|e-mail|mail/i.test(k)) ? row[Object.keys(row).find(k => /email|e-mail|mail/i.test(k))] : '');
           
           let srNo = index + 1;
           if (columnMapping.srNo && row[columnMapping.srNo]) {
@@ -222,7 +223,10 @@ export default function MessageCardGrid() {
                     <span className="text-slate-400 font-medium mr-1 text-xs">{srNo}</span> 
                     {name}
                   </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{phone}</p>
+                  <div className="text-xs text-slate-500 mt-1 flex flex-col gap-0.5">
+                    <span>{phone}</span>
+                    {email && <span className="text-indigo-400/90 truncate max-w-[200px]" title={email}>{email}</span>}
+                  </div>
                 </div>
                 <div className="text-right flex flex-col gap-1 items-end">
                   {isContacted ? (
