@@ -90,8 +90,8 @@ export default function MessageCardGrid() {
     const subject = encodeURIComponent("Campaign Update");
     const body = encodeURIComponent(resolvedMessage);
 
-    const url = `mailto:${email}?subject=${subject}&body=${body}`;
-    window.open(url, '_self'); // mailto usually works better with _self or just changing window.location
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
+    window.open(url, '_blank'); 
     markAsSent(index);
   };
 
