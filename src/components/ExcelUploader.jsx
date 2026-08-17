@@ -40,8 +40,9 @@ export default function ExcelUploader() {
           const phoneCol = detectedColumns.find(c => /phone|mobile|contact|cell|whatsapp/i.test(c)) || '';
           const nameCol = detectedColumns.find(c => /name|customer|client/i.test(c)) || '';
           const emailCol = detectedColumns.find(c => /email|e-mail|mail/i.test(c)) || '';
+          const srNoCol = detectedColumns.find(c => /sr|serial|no|#|id/i.test(c)) || '';
 
-          addDataset(file.name, parsedData, detectedColumns, { phone: phoneCol, name: nameCol, email: emailCol });
+          addDataset(file.name, parsedData, detectedColumns, { phone: phoneCol, name: nameCol, email: emailCol, srNo: srNoCol });
         }
       } catch (err) {
         alert("Invalid file format. Please upload a valid .xlsx or .csv file.");
