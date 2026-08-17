@@ -52,7 +52,7 @@ export default function TemplateEditor() {
       </div>
 
       {/* Template Tabs */}
-      <div className="flex overflow-x-auto gap-2 px-5 pt-3 border-b border-slate-100 bg-slate-50 shrink-0 custom-scrollbar">
+      <div className="flex overflow-x-auto gap-2 px-5 pt-3 pb-2 border-b border-slate-100 bg-slate-50 shrink-0 custom-scrollbar">
         {templates.map(t => (
           <div 
             key={t.id}
@@ -62,8 +62,8 @@ export default function TemplateEditor() {
             <input 
               value={t.name}
               onChange={(e) => saveTemplate(t.id, e.target.value, t.text)}
-              className="bg-transparent outline-none w-28 focus:w-40 transition-all text-inherit"
-              onClick={(e) => e.stopPropagation()}
+              className="bg-transparent outline-none w-28 focus:w-40 transition-all text-inherit cursor-pointer focus:cursor-text"
+              onClick={() => setActiveTemplateId(t.id)}
             />
             {templates.length > 1 && (
               <button 
