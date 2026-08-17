@@ -209,7 +209,7 @@ export default function MessageCardGrid() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h4 className="font-bold text-slate-800 truncate max-w-[200px]" title={name}>
-                    <span className="text-slate-400 font-medium mr-1 text-xs">SR No. {srNo} -</span> 
+                    <span className="text-slate-400 font-medium mr-1 text-xs">{srNo}</span> 
                     {name}
                   </h4>
                   <p className="text-xs text-slate-500 mt-0.5">{phone}</p>
