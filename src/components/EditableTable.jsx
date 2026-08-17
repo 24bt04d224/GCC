@@ -3,7 +3,9 @@ import { useAppStore } from '../store';
 import { Trash2, Plus, Search } from 'lucide-react';
 
 export default function EditableTable() {
-  const { data, columns, columnMapping, setColumnMapping, updateRow, addRow, deleteRow, clearData } = useAppStore();
+  const { datasets, activeDatasetId, setColumnMapping, updateRow, addRow, deleteRow, clearData } = useAppStore();
+  const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} };
+  const { data, columns, columnMapping } = activeDataset;
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCell, setEditingCell] = useState(null);
 

@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet } from 'lucide-react';
 
 export default function ExcelUploader() {
-  const { setColumns, setData, setColumnMapping } = useAppStore();
+  const { addDataset } = useAppStore();
   const fileRef = useRef(null);
 
   const handleFileUpload = (e) => {
@@ -40,9 +40,7 @@ export default function ExcelUploader() {
           const phoneCol = detectedColumns.find(c => /phone|mobile|contact|cell|whatsapp/i.test(c)) || '';
           const nameCol = detectedColumns.find(c => /name|customer|client/i.test(c)) || '';
 
-          setColumns(detectedColumns);
-          setData(parsedData);
-          setColumnMapping({ phone: phoneCol, name: nameCol });
+          addDataset(file.name, parsedData, detectedColumns, { phone: phoneCol, name: nameCol });
         }
       } catch (err) {
         alert("Invalid file format. Please upload a valid .xlsx or .csv file.");

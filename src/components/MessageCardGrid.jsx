@@ -3,7 +3,9 @@ import { useAppStore } from '../store';
 import { Send, CheckCircle2, Clock } from 'lucide-react';
 
 export default function MessageCardGrid() {
-  const { data, columns, columnMapping, templates, activeTemplateId, dispatchStatuses, markAsSent, deleteRow } = useAppStore();
+  const { datasets, activeDatasetId, templates, activeTemplateId, markAsSent, deleteRow } = useAppStore();
+  const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} };
+  const { data, columns, columnMapping, dispatchStatuses } = activeDataset;
   const [filter, setFilter] = useState('All');
   const [exclusionToggles, setExclusionToggles] = useState(['Touch 1 Channel']); // Default to Touch 1
   const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];

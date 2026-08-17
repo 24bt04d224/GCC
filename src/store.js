@@ -8,32 +8,81 @@ export const useAppStore = create(
       activeTab: 'data', // 'data' | 'dispatcher'
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      // Data Grid State
-      data: [],
-      setData: (data) => set({ data }),
-      columns: [],
-      setColumns: (columns) => set({ columns }),
-      columnMapping: { phone: '', name: '' },
-      setColumnMapping: (mapping) => set((state) => ({ 
-        columnMapping: { ...state.columnMapping, ...mapping } 
-      })),
+      // Datasets State
+      datasets: [], // { id, name, data, columns, columnMapping, dispatchStatuses }
+      activeDatasetId: null,
+
+      addDataset: (name, data, columns, columnMapping) => set((state) => {
+        const id = Date.now().toString();
+        const newDataset = { id, name, data, columns, columnMapping: columnMapping || { phone: '', name: '' }, dispatchStatuses: {} };
+        return { 
+          datasets: [...state.datasets, newDataset],
+          activeDatasetId: id 
+        };
+      }),
+      setActiveDatasetId: (id) => set({ activeDatasetId: id }),
+      deleteDataset: (id) => set((state) => {
+        const newDatasets = state.datasets.filter(d => d.id !== id);
+        return {
+          datasets: newDatasets,
+          activeDatasetId: state.activeDatasetId === id ? (newDatasets[0]?.id || null) : state.activeDatasetId
+        };
+      }),
+
+      setColumnMapping: (mapping) => set((state) => {
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => 
+            d.id === state.activeDatasetId 
+              ? { ...d, columnMapping: { ...d.columnMapping, ...mapping } } 
+              : d
+          )
+        };
+      }),
       
       // Grid CRUD
       updateRow: (index, key, value) => set((state) => {
-        const newData = [...state.data];
-        newData[index] = { ...newData[index], [key]: value };
-        return { data: newData };
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => {
+            if (d.id !== state.activeDatasetId) return d;
+            const newData = [...d.data];
+            newData[index] = { ...newData[index], [key]: value };
+            return { ...d, data: newData };
+          })
+        };
       }),
       addRow: () => set((state) => {
-        const newRow = state.columns.reduce((acc, col) => ({ ...acc, [col]: '' }), {});
-        return { data: [newRow, ...state.data] };
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => {
+            if (d.id !== state.activeDatasetId) return d;
+            const newRow = d.columns.reduce((acc, col) => ({ ...acc, [col]: '' }), {});
+            return { ...d, data: [newRow, ...d.data] };
+          })
+        };
       }),
       deleteRow: (index) => set((state) => {
-        const newData = [...state.data];
-        newData.splice(index, 1);
-        return { data: newData };
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => {
+            if (d.id !== state.activeDatasetId) return d;
+            const newData = [...d.data];
+            newData.splice(index, 1);
+            return { ...d, data: newData };
+          })
+        };
       }),
-      clearData: () => set({ data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} }),
+      clearData: () => set((state) => {
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => 
+            d.id === state.activeDatasetId 
+              ? { ...d, data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} } 
+              : d
+          )
+        };
+      }),
 
       // Template Management
       templates: [
@@ -54,25 +103,42 @@ export const useAppStore = create(
       })),
 
       // Dispatch Matrix State
-      dispatchStatuses: {}, // { rowIndex: { status: 'Sent', timestamp: '...' } }
-      markAsSent: (index) => set((state) => ({
-        dispatchStatuses: { 
-          ...state.dispatchStatuses, 
-          [index]: { status: 'Sent', timestamp: new Date().toLocaleString() } 
-        }
-      })),
+      markAsSent: (index) => set((state) => {
+        if (!state.activeDatasetId) return state;
+        return {
+          datasets: state.datasets.map(d => {
+            if (d.id !== state.activeDatasetId) return d;
+            return {
+              ...d,
+              dispatchStatuses: { 
+                ...d.dispatchStatuses, 
+                [index]: { status: 'Sent', timestamp: new Date().toLocaleString() } 
+              }
+            };
+          })
+        };
+      }),
 
       // Mock Data Loader
-      loadSampleData: () => set({
-        columns: ['StudentName', 'Title', 'Mobile', 'Course', 'Batch', 'Country'],
-        columnMapping: { phone: 'Mobile', name: 'StudentName' },
-        data: [
-          { StudentName: 'Aarav Patel', Title: 'Sir', Mobile: '9876543210', Course: 'B.Tech CSE', Batch: '2021', Country: 'USA' },
-          { StudentName: 'Priya Sharma', Title: 'Ma\'am', Mobile: '9123456789', Course: 'BBA', Batch: '2020', Country: 'UK' },
-          { StudentName: 'Rahul Verma', Title: 'Sir', Mobile: '9988776655', Course: 'B.Sc Chemistry', Batch: '2022', Country: 'Canada' },
-          { StudentName: 'Sneha Gupta', Title: 'Ma\'am', Mobile: '9871234560', Course: 'B.Tech Mechanical', Batch: '2019', Country: 'Germany' },
-        ],
-        dispatchStatuses: {}
+      loadSampleData: () => set((state) => {
+        const id = Date.now().toString();
+        const sampleDataset = {
+          id,
+          name: 'Sample Data',
+          columns: ['StudentName', 'Title', 'Mobile', 'Course', 'Batch', 'Country'],
+          columnMapping: { phone: 'Mobile', name: 'StudentName' },
+          data: [
+            { StudentName: 'Aarav Patel', Title: 'Sir', Mobile: '9876543210', Course: 'B.Tech CSE', Batch: '2021', Country: 'USA' },
+            { StudentName: 'Priya Sharma', Title: 'Ma\'am', Mobile: '9123456789', Course: 'BBA', Batch: '2020', Country: 'UK' },
+            { StudentName: 'Rahul Verma', Title: 'Sir', Mobile: '9988776655', Course: 'B.Sc Chemistry', Batch: '2022', Country: 'Canada' },
+            { StudentName: 'Sneha Gupta', Title: 'Ma\'am', Mobile: '9871234560', Course: 'B.Tech Mechanical', Batch: '2019', Country: 'Germany' },
+          ],
+          dispatchStatuses: {}
+        };
+        return {
+          datasets: [...state.datasets, sampleDataset],
+          activeDatasetId: id
+        };
       })
     }),
     { name: 'whatsapp-campaign-hub-v2' }

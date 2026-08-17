@@ -1,13 +1,14 @@
 import React from 'react';
 import { useAppStore } from './store';
-import { MessageSquare, Database, Send, AlertCircle } from 'lucide-react';
+import { MessageSquare, Database, Send, AlertCircle, Trash2 } from 'lucide-react';
 import ExcelUploader from './components/ExcelUploader';
 import EditableTable from './components/EditableTable';
 import TemplateEditor from './components/TemplateEditor';
 import MessageCardGrid from './components/MessageCardGrid';
 
 export default function App() {
-  const { activeTab, setActiveTab, loadSampleData, data } = useAppStore();
+  const { activeTab, setActiveTab, loadSampleData, datasets, activeDatasetId, setActiveDatasetId, deleteDataset } = useAppStore();
+  const activeDataset = datasets.find(d => d.id === activeDatasetId);
   const senderProfile = "+91 6353303572";
 
   return (
@@ -42,13 +43,37 @@ export default function App() {
 
             {/* Top Right Actions */}
             <div className="flex items-center gap-4">
+              {datasets.length > 0 && (
+                <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                  <select 
+                    value={activeDatasetId || ''}
+                    onChange={(e) => setActiveDatasetId(e.target.value)}
+                    className="bg-transparent text-sm font-semibold text-slate-700 outline-none pl-2 pr-1 max-w-[150px] truncate"
+                  >
+                    {datasets.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("Delete this dataset?")) {
+                        deleteDataset(activeDatasetId);
+                      }
+                    }}
+                    className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                    title="Delete Dataset"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
               <button 
                 onClick={loadSampleData}
                 className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
               >
                 Load Mock Data
               </button>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 hidden sm:inline-flex">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 Sender: {senderProfile}
               </span>
@@ -63,7 +88,7 @@ export default function App() {
             <ExcelUploader />
             <EditableTable />
           </div>
-        ) : data.length > 0 ? (
+        ) : activeDataset && activeDataset.data.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="lg:col-span-5"><TemplateEditor /></div>
             <div className="lg:col-span-7"><MessageCardGrid /></div>
