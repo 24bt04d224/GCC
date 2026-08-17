@@ -75,13 +75,18 @@ export default function MessageCardGrid() {
   };
 
   const handleSendEmail = (index, row, resolvedMessage) => {
-    const emailCol = columnMapping.email;
-    if (!emailCol || !row[emailCol]) {
+    let email = columnMapping.email ? row[columnMapping.email] : null;
+    
+    if (!email) {
+      const emailKey = Object.keys(row).find(k => /email|e-mail|mail/i.test(k));
+      if (emailKey) email = row[emailKey];
+    }
+
+    if (!email) {
       alert("No valid email address found! Check your column mapping.");
       return;
     }
 
-    const email = row[emailCol];
     const subject = encodeURIComponent("Campaign Update");
     const body = encodeURIComponent(resolvedMessage);
 
