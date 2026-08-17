@@ -3,7 +3,7 @@ import { useAppStore } from '../store';
 import { Send, CheckCircle2, Clock } from 'lucide-react';
 
 export default function MessageCardGrid() {
-  const { data, columns, columnMapping, templates, activeTemplateId, dispatchStatuses, markAsSent } = useAppStore();
+  const { data, columns, columnMapping, templates, activeTemplateId, dispatchStatuses, markAsSent, deleteRow } = useAppStore();
   const [filter, setFilter] = useState('All');
   const [exclusionToggles, setExclusionToggles] = useState(['Touch 1 Channel']); // Default to Touch 1
   const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
@@ -72,6 +72,23 @@ export default function MessageCardGrid() {
     markAsSent(index);
   };
 
+  // Pre-calculate duplicates
+  const seenPhones = new Set();
+  const duplicateIndices = new Set();
+  data.forEach((row, i) => {
+    const rawPhone = columnMapping.phone ? row[columnMapping.phone] : null;
+    if (rawPhone) {
+      let cleanPhone = String(rawPhone).replace(/[- ()]/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      
+      if (seenPhones.has(cleanPhone)) {
+        duplicateIndices.add(i);
+      } else {
+        seenPhones.add(cleanPhone);
+      }
+    }
+  });
+
   const filteredData = data.map((row, i) => ({ row, index: i })).filter(({ row, index }) => {
     const isContacted = checkIsContacted(row);
     
@@ -79,6 +96,7 @@ export default function MessageCardGrid() {
     if (isContacted) status = 'Contacted';
 
     if (filter === 'All') return true;
+    if (filter === 'Duplicates') return duplicateIndices.has(index);
     return status === filter;
   });
 
@@ -131,15 +149,18 @@ export default function MessageCardGrid() {
         </div>
         
         <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner overflow-x-auto">
-          {['All', 'Pending', 'Sent', 'Contacted'].map(f => (
+          {['All', 'Pending', 'Sent', 'Contacted', 'Duplicates'].map(f => {
+            const isDupFilter = f === 'Duplicates';
+            return (
             <button 
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${filter === f ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-900'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${filter === f ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-900'} ${isDupFilter && filter !== f && duplicateIndices.size > 0 ? 'text-orange-500' : ''}`}
             >
-              {f}
+              {f} {isDupFilter && duplicateIndices.size > 0 && `(${duplicateIndices.size})`}
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -148,6 +169,7 @@ export default function MessageCardGrid() {
         {filteredData.map(({ row, index }) => {
           const dispatchRecord = dispatchStatuses[index];
           const isSent = dispatchRecord?.status === 'Sent';
+          const isDuplicate = duplicateIndices.has(index);
           const name = columnMapping.name ? row[columnMapping.name] : 'Unknown';
           const phone = columnMapping.phone ? row[columnMapping.phone] : 'No Phone';
           const resolvedMsg = resolveTemplate(row);
@@ -156,11 +178,13 @@ export default function MessageCardGrid() {
 
           return (
             <div key={index} className={`rounded-2xl shadow-sm border p-5 flex flex-col transition-all duration-200 ${
-              isContacted
-                ? 'opacity-60 bg-slate-50 border-slate-200'
-                : isSent 
-                  ? 'bg-emerald-50/20 border-emerald-200' 
-                  : 'bg-white border-slate-200 hover:border-emerald-400 hover:shadow-md'
+              isDuplicate
+                ? 'border-orange-300 bg-orange-50/10'
+                : isContacted
+                  ? 'opacity-60 bg-slate-50 border-slate-200'
+                  : isSent 
+                    ? 'bg-emerald-50/20 border-emerald-200' 
+                    : 'bg-white border-slate-200 hover:border-emerald-400 hover:shadow-md'
             }`}>
               
               <div className="flex justify-between items-start mb-4">
@@ -168,7 +192,7 @@ export default function MessageCardGrid() {
                   <h4 className="font-bold text-slate-800 truncate max-w-[150px]">{name}</h4>
                   <p className="text-xs text-slate-500 mt-0.5">{phone}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col gap-1 items-end">
                   {isContacted ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600">
                       <CheckCircle2 size={12} />
@@ -180,6 +204,11 @@ export default function MessageCardGrid() {
                       {isSent ? 'Sent' : 'Pending'}
                     </span>
                   )}
+                  {isDuplicate && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800">
+                      Duplicate
+                    </span>
+                  )}
                   {isSent && !isContacted && <div className="text-[10px] text-slate-400 mt-1">{dispatchRecord.timestamp}</div>}
                 </div>
               </div>
@@ -188,20 +217,31 @@ export default function MessageCardGrid() {
                 {resolvedMsg}
               </div>
 
-              <button 
-                onClick={() => handleSend(index, row, resolvedMsg)}
-                disabled={isContacted}
-                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${
-                  isContacted
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : isSent 
-                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
-                      : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
-                }`}
-              >
-                <Send size={16} /> 
-                {isContacted ? 'Already Contacted' : isSent ? 'Resend Campaign' : 'Send WhatsApp'}
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleSend(index, row, resolvedMsg)}
+                  disabled={isContacted}
+                  className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${
+                    isContacted
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : isSent 
+                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
+                  }`}
+                >
+                  <Send size={16} /> 
+                  {isContacted ? 'Already Contacted' : isSent ? 'Resend' : 'Send WhatsApp'}
+                </button>
+                {isDuplicate && (
+                  <button 
+                    onClick={() => deleteRow(index)}
+                    className="px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl font-bold transition-all border border-red-100"
+                    title="Remove Duplicate"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>>
             </div>
           );
         })}

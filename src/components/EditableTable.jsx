@@ -9,7 +9,24 @@ export default function EditableTable() {
 
   if (data.length === 0) return null;
 
-  const filteredData = data.filter(row => 
+  // Pre-calculate duplicates
+  const seenPhones = new Set();
+  const duplicateIndices = new Set();
+  data.forEach((row, i) => {
+    const rawPhone = columnMapping.phone ? row[columnMapping.phone] : null;
+    if (rawPhone) {
+      let cleanPhone = String(rawPhone).replace(/[- ()]/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      
+      if (seenPhones.has(cleanPhone)) {
+        duplicateIndices.add(i);
+      } else {
+        seenPhones.add(cleanPhone);
+      }
+    }
+  });
+
+  const filteredData = data.map((row, i) => ({ row, originalIndex: i })).filter(({ row }) => 
     Object.values(row).some(val => String(val).toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -78,23 +95,28 @@ export default function EditableTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-100">
-            {filteredData.map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-slate-50 group">
-                <td className="px-6 py-3 whitespace-nowrap text-sm text-slate-400 font-medium">{rowIndex + 1}</td>
+            {filteredData.map(({ row, originalIndex }) => {
+              const isDuplicate = duplicateIndices.has(originalIndex);
+              return (
+              <tr key={originalIndex} className={`group ${isDuplicate ? 'bg-orange-50/50 hover:bg-orange-50' : 'hover:bg-slate-50'}`}>
+                <td className="px-6 py-3 whitespace-nowrap text-sm text-slate-400 font-medium">
+                  {originalIndex + 1}
+                  {isDuplicate && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-bold">DUP</span>}
+                </td>
                 {columns.map((col, colIndex) => {
-                  const isEditing = editingCell?.row === rowIndex && editingCell?.col === col;
+                  const isEditing = editingCell?.row === originalIndex && editingCell?.col === col;
                   return (
                     <td 
                       key={colIndex} 
                       className="px-6 py-3 whitespace-nowrap text-sm text-slate-700 cursor-pointer"
-                      onClick={() => setEditingCell({ row: rowIndex, col })}
+                      onClick={() => setEditingCell({ row: originalIndex, col })}
                     >
                       {isEditing ? (
                         <input
                           autoFocus
                           className="border-b-2 border-emerald-500 outline-none bg-transparent w-full py-1 text-emerald-900"
                           value={row[col] || ''}
-                          onChange={(e) => updateRow(rowIndex, col, e.target.value)}
+                          onChange={(e) => updateRow(originalIndex, col, e.target.value)}
                           onBlur={() => setEditingCell(null)}
                           onKeyDown={(e) => e.key === 'Enter' && setEditingCell(null)}
                         />
@@ -105,12 +127,13 @@ export default function EditableTable() {
                   );
                 })}
                 <td className="px-6 py-3 whitespace-nowrap text-right text-sm">
-                  <button onClick={() => deleteRow(rowIndex)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => deleteRow(originalIndex)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

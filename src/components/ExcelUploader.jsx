@@ -37,11 +37,11 @@ export default function ExcelUploader() {
 
         if (parsedData.length > 0) {
           const detectedColumns = Object.keys(parsedData[0]);
-          setColumns(detectedColumns);
-          setData(parsedData);
-          
           const phoneCol = detectedColumns.find(c => /phone|mobile|contact|cell|whatsapp/i.test(c)) || '';
           const nameCol = detectedColumns.find(c => /name|customer|client/i.test(c)) || '';
+
+          setColumns(detectedColumns);
+          setData(parsedData);
           setColumnMapping({ phone: phoneCol, name: nameCol });
         }
       } catch (err) {
