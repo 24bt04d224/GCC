@@ -22,8 +22,13 @@ export default function ExcelUploader() {
         const aoa = XLSX.utils.sheet_to_json(ws, { header: 1 });
         let headerRowIndex = aoa.findIndex(row => 
           row.some(cell => {
-            const str = String(cell).toLowerCase();
-            return str.includes('name') || str.includes('phone') || str.includes('email');
+            if (!cell) return false;
+            const str = String(cell).toLowerCase().trim();
+            return [
+              'name', 'student name', 'first name', 'last name', 
+              'phone', 'phone number', 'whatsapp number', 'mobile',
+              'email', 'email id', 'email address', 'sr no', 'batch'
+            ].includes(str);
           })
         );
         if (headerRowIndex === -1) headerRowIndex = 0; // Fallback to first row
