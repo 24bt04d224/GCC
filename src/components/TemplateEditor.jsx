@@ -3,8 +3,10 @@ import { useAppStore } from '../store';
 import { FileText, Save, Plus, Trash2 } from 'lucide-react';
 
 export default function TemplateEditor() {
-  const { templates, activeTemplateId, saveTemplate, setActiveTemplateId, deleteTemplate, columns, data } = useAppStore();
-  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
+  const { datasets, activeDatasetId, templates, activeTemplateId, saveTemplate, setActiveTemplateId, deleteTemplate } = useAppStore();
+  const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [] };
+  const { columns = [], data = [] } = activeDataset;
+  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0] || { text: '' };
   const textareaRef = useRef(null);
 
   const handleAddTemplate = () => {
