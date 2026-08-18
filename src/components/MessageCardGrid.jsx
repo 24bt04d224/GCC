@@ -5,10 +5,10 @@ import { Send, CheckCircle2, Clock, Mail } from 'lucide-react';
 export default function MessageCardGrid() {
   const { datasets, activeDatasetId, templates, activeTemplateId, markAsSent, deleteRow } = useAppStore();
   const activeDataset = datasets.find(d => d.id === activeDatasetId) || { data: [], columns: [], columnMapping: { phone: '', name: '' }, dispatchStatuses: {} };
-  const { data, columns, columnMapping, dispatchStatuses } = activeDataset;
+  const { data = [], columns = [], columnMapping = {}, dispatchStatuses = {} } = activeDataset;
   const [filter, setFilter] = useState('All');
   const [exclusionToggles, setExclusionToggles] = useState(['Touch 1 Channel']); // Default to Touch 1
-  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
+  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0] || { text: '' };
 
   const checkIsContacted = (row) => {
     for (const toggle of exclusionToggles) {
