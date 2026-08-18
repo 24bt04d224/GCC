@@ -7,7 +7,7 @@ import TemplateEditor from './components/TemplateEditor';
 import MessageCardGrid from './components/MessageCardGrid';
 
 export default function App() {
-  const { activeTab, setActiveTab, loadSampleData, datasets, activeDatasetId, setActiveDatasetId, deleteDataset } = useAppStore();
+  const { activeTab = 'data', setActiveTab, loadSampleData, datasets = [], activeDatasetId, setActiveDatasetId, deleteDataset } = useAppStore();
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
   const senderProfile = "+91 6353303572";
 
